@@ -3,44 +3,48 @@ from executor import execute
 
 import gitsync
 
+
 @pytest.fixture
 def new_repo(tmpdir):
-    execute('git init', directory=str(tmpdir), silent=True)
-    return tmpdir
+    repo_path = tmpdir.mkdir('repo')
+    repo = gitsync.Repository(str(repo_path))
+    repo.call('git init')
+    return repo
+
 
 @pytest.fixture
 def repo(new_repo):
-    new_repo.join('file1').write('testcontent')
-    execute('git add .', directory=str(new_repo), silent=True)
-    execute('git commit -m commit1', directory=str(new_repo), silent=True)
+    new_repo.pypath.join('file1').write('testcontent')
+    new_repo.call('git add .')
+    new_repo.call('git commit -m commit1')
     return new_repo
 
 
 def test_commits_new_files(repo):
-    assert repo.join('file1').check()
-    assert gitsync.check_repository(str(repo))
-    repo.join('file2').write('testcontent2')
-    assert not gitsync.check_repository(str(repo))
-    gitsync.commit_repository(str(repo))
-    assert gitsync.check_repository(str(repo))
+    assert repo.pypath.join('file1').check()
+    assert repo.is_clean()
+    repo.pypath.join('file2').write('testcontent2')
+    assert not repo.is_clean()
+    repo.automatic_commit()
+    assert repo.is_clean()
 
 
 def test_commits_changed_files(repo):
-    assert repo.join('file1').check()
-    assert gitsync.check_repository(str(repo))
-    repo.join('file1').write('testcontent2')
-    assert not gitsync.check_repository(str(repo))
-    gitsync.commit_repository(str(repo))
-    assert gitsync.check_repository(str(repo))
+    assert repo.pypath.join('file1').check()
+    assert repo.is_clean()
+    repo.pypath.join('file1').write('testcontent2')
+    assert not repo.is_clean()
+    repo.automatic_commit()
+    assert repo.is_clean()
 
 
 def test_commits_removed_files(repo):
-    assert repo.join('file1').check()
-    assert gitsync.check_repository(str(repo))
-    repo.join('file1').remove()
-    assert not gitsync.check_repository(str(repo))
-    gitsync.commit_repository(str(repo))
-    assert gitsync.check_repository(str(repo))
+    assert repo.pypath.join('file1').check()
+    assert repo.is_clean()
+    repo.pypath.join('file1').remove()
+    assert not repo.is_clean()
+    repo.automatic_commit()
+    assert repo.is_clean()
 
 #def test_commits_changed_files(repo):
 #    assert 0
