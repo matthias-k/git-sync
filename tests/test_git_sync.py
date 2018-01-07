@@ -69,6 +69,15 @@ def upstream_changes(repo2):
     return repo2
 
 
+@pytest.fixture
+def upstream_conflicting(repo2):
+    repo2.pypath.join('file1').write('remote testcontent')
+    repo2.automatic_commit()
+    repo2.call('git add file1')
+    repo2.call('git push')
+    return repo2
+
+
 def test_commits_trivial(repo):
     assert repo.pypath.join('file1').check()
     assert repo.is_clean()
@@ -115,14 +124,14 @@ def test_auto_sync_no_changes(repo, bare_repo):
     old_local_head = repo.HEAD
     old_remote_head = bare_repo.HEAD
     assert old_local_head == old_remote_head
-    repo.auto_sync()
+    result = repo.auto_sync()
     assert repo.HEAD == old_local_head
     assert bare_repo.HEAD == old_remote_head
 
 
 def test_auto_sync_only_local(repo, bare_repo, local_uncommited_changes):
     old_head = repo.HEAD
-    repo.auto_sync()
+    result = repo.auto_sync()
     new_head = repo.HEAD
     assert new_head != old_head
     assert bare_repo.HEAD == new_head
@@ -132,7 +141,7 @@ def test_auto_sync_only_remote(repo, bare_repo, upstream_changes):
     old_local_head = repo.HEAD
     old_remote_head = bare_repo.HEAD
     assert old_local_head != old_remote_head
-    repo.auto_sync()
+    result = repo.auto_sync()
     assert bare_repo.HEAD == old_remote_head, "remote did not change"
     assert repo.HEAD == bare_repo.HEAD, "local is now as upstream"
 
@@ -141,10 +150,18 @@ def test_auto_sync_local_and_remote(repo, bare_repo, local_uncommited_changes, u
     old_local_head = repo.HEAD
     old_remote_head = bare_repo.HEAD
     assert old_local_head != old_remote_head
-    repo.auto_sync()
+    result = repo.auto_sync()
     assert bare_repo.HEAD != old_remote_head, "remote changed"
     assert repo.HEAD != old_local_head, "remote changed"
     assert repo.HEAD == bare_repo.HEAD, "local is now as upstream"
+
+
+def test_auto_sync_conflict(repo, bare_repo, local_uncommited_changes, upstream_conflicting):
+    old_local_head = repo.HEAD
+    old_remote_head = bare_repo.HEAD
+    result = repo.auto_sync()
+    assert bare_repo.HEAD == old_remote_head
+    assert repo.HEAD == bare_repo.rev_parse('conflict1')
 
 
 # test pull and merge: success

@@ -1,7 +1,7 @@
 #!/bin/env python3
 from datetime import datetime
 
-from executor import execute
+from executor import execute, ExternalCommandFailed
 import py
 
 
@@ -30,16 +30,32 @@ class Repository(object):
             self.call('git commit -m "automatic commit {}"'.format(datetime.utcnow()))
 
     def push(self, remote='origin', remote_branch='master'):
-        self.call('git push {} {}'.format(remote, remote_branch))
+        self.call('git push {} HEAD:{}'.format(remote, remote_branch), silent=False)
 
     def pull(self, remote='origin', remote_branch='master'):
-        self.call('git pull --no-edit {} {}'.format(remote, remote_branch))
+        self.call('git pull --no-edit {} {}'.format(remote, remote_branch), capture=True, silent=False)
+
+
+    def try_pull(self, remote='origin', remote_branch='master'):
+        try:
+            self.pull(remote=remote, remote_branch=remote_branch)
+            return True
+        except ExternalCommandFailed as e:
+            command = e.command
+            output = command.decoded_stdout
+            if 'CONFLICT' in output:
+                return False
+            raise
+
 
     def auto_sync(self):
         """perform full auto sync cycle"""
         self.automatic_commit()
-        self.pull()
-        self.push()
+        merge_success = self.try_pull()
+        if merge_success:
+            self.push()
+        else:
+            self.push(remote_branch='conflict1')
 
     def call(self, cmd, capture=False, silent=True):
         return execute(cmd, directory=self.directory, capture=capture, silent=silent)
