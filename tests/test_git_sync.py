@@ -111,6 +111,15 @@ def test_commits_removed_files(repo):
     assert repo.HEAD != head
 
 
+def test_auto_sync_no_changes(repo, bare_repo):
+    old_local_head = repo.HEAD
+    old_remote_head = bare_repo.HEAD
+    assert old_local_head == old_remote_head
+    repo.auto_sync()
+    assert repo.HEAD == old_local_head
+    assert bare_repo.HEAD == old_remote_head
+
+
 def test_auto_sync_only_local(repo, bare_repo, local_uncommited_changes):
     old_head = repo.HEAD
     repo.auto_sync()
