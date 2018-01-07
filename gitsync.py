@@ -19,7 +19,8 @@ class Repository(object):
 
     def automatic_commit(self):
         self.call('git add .')
-        self.call('git commit -m "automatic commit {}"'.format(datetime.utcnow()))
+        if not self.is_clean():
+            self.call('git commit -m "automatic commit {}"'.format(datetime.utcnow()))
 
     def call(self, cmd, capture=False, silent=True):
         return execute(cmd, directory=self.directory, capture=capture, silent=silent)
