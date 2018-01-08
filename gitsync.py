@@ -3,6 +3,7 @@ from datetime import datetime
 
 from executor import execute, ExternalCommandFailed
 import py
+import click
 
 SUCCESS = 'success'
 CONFLICT = 'conflict'
@@ -68,3 +69,19 @@ class Repository(object):
     @property
     def pypath(self):
         return py.path.local(self.directory)
+
+
+def handle_repository(repository, notify=False):
+    repo = Repository(repository)
+    result = repo.auto_sync()
+
+
+@click.command
+@click.option('--notify/--no-notify', default=False)
+@click.argument('repository')
+def main(notify, repository):
+    handle_repository(repository, notify=notify)
+
+
+if __name__ == '__main__':
+    main()

@@ -1,3 +1,5 @@
+Note: git-sync is currently work-in-progress and not yet fully functioning.
+
 # git-sync
 
 `git-sync` is a tool to automatically keep a git repository in sync with its remote. It's main intended usecase is for smartphones
@@ -12,6 +14,8 @@ push to `conflict1` unless this is conflicting too. Then it will push to `confli
 
 ## Setup
 
+In Termux run
+
 ```
 pkg upgrade
 pkg install git
@@ -19,4 +23,4 @@ pkg install openssh
 pkg install python
 ```
 
-
+tbc.

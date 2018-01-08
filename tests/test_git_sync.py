@@ -167,6 +167,7 @@ def test_auto_sync_conflict(repo, bare_repo, local_uncommited_changes, upstream_
     old_local_head = repo.HEAD
     old_remote_head = bare_repo.HEAD
     result = repo.auto_sync()
+    assert repo.is_clean()
     assert result['status'] == gitsync.CONFLICT
     assert result['remote_branch'] == 'conflict1'
     assert bare_repo.HEAD == old_remote_head
